@@ -1,0 +1,58 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Constantes do circuito
+R = 980+28  # Resistência (Ohm)
+L = 0.0477  # Indutância (H)
+C = 6.1e-9  # Capacitância (F)
+
+# Função para calcular a corrente
+def corrente(v, f):
+    w = 2 * np.pi * f * 1e3  # Convertendo frequência para rad/s
+    Z = np.hypot(R, (w*L - 1/(w*C)))  # Impedância total do circuito
+    return (v / Z) * 1e3  # Corrente em mA
+
+# Dados experimentais
+frequencia_kHz = np.array([4.5, 5.5, 6, 7.5, 8, 8.5, 9, 9.5, 10, 10.26, 11.58, 12.2, 13, 13.14, 13.4, 14, 14.5, 15, 15.5, 16, 16.5, 17, 17.5,18])
+potencial = np.array([2,2.7, 2.9, 4.5, 5.3, 6.5, 7.7, 9, 9.4, 9.5, 7.3, 6.2, 5, 4.8, 4.5, 3.9, 3.5, 3.2, 2.8, 2.7, 2.2, 2.1, 2, 1.7])
+
+# Convertendo frequência para Hz
+frequencia_Hz = frequencia_kHz * 1e3
+
+# Calculando corrente experimental e incertezas
+corrente_mA = np.array([corrente(v, f) for v, f in zip(potencial, frequencia_kHz)])*1e-3
+incerteza_corrente = 0.05 * corrente_mA  # 5% de incerteza
+incerteza_frequencia = np.full_like(frequencia_kHz, 0.2)  # Incerteza fixa de 0.4 kHz
+
+# **Linha guia teórica**: Calculando a corrente para uma faixa contínua de frequências
+frequencia_teorica_kHz = np.linspace(min(frequencia_kHz), max(frequencia_kHz), 500)
+frequencia_teorica_Hz = frequencia_teorica_kHz
+potencial_interp = np.interp(frequencia_teorica_kHz, frequencia_kHz, potencial)  # Interpola V(f)
+corrente_teorica_mA = [corrente(v, f)*1e-3 for v, f in zip(potencial_interp, frequencia_teorica_Hz)]
+
+# **Encontrando o pico da corrente**
+indice_pico = np.argmax(corrente_mA)  # Índice do maior valor de corrente
+freq_pico = frequencia_kHz[indice_pico]  # Frequência correspondente
+corrente_pico = corrente_mA[indice_pico]  # Maior corrente
+
+# **Plotagem**
+plt.figure(figsize=(8, 5))
+
+# **Linha teórica**
+plt.plot(frequencia_teorica_kHz, corrente_teorica_mA, linestyle='-', color='r', label="Teórico (linha guia)")
+
+# **Pontos experimentais com barras de erro**
+plt.errorbar(frequencia_kHz, corrente_mA, yerr=incerteza_corrente, xerr=incerteza_frequencia, 
+             fmt='o', capsize=3, label=" Erro experimental", color='b')
+
+# **Destacando o pico da corrente**
+plt.scatter(freq_pico, corrente_pico, color='g', s=100, edgecolors='black', zorder=3, label="Pico da Corrente")
+
+# Melhorando o gráfico
+plt.title("Corrente em função da frequência em um circuito RLC")
+plt.xlabel("Frequência (kHz)")
+plt.ylabel("Corrente (mA)")
+plt.legend()
+plt.grid(True)
+
+plt.show()
