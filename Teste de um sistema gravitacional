@@ -1,0 +1,160 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
+def posição_inicial(N):
+    posição = {} # chave coordenada - Partícula - tempo
+    for particulas in range(N):
+        velocidade = np.random.rand(2)
+        massa = np.random.rand()
+        X_0 = np.random.rand()
+        Y_0 = np.random.rand()
+        posi_Nega = np.random.rand(2)
+        posi_NegaV = np.random.rand(2)
+        if posi_Nega[0] >= 0.5:
+            X_0 = -X_0
+        if posi_Nega[1] >= 0.5:
+            Y_0 = -Y_0
+        if posi_NegaV[0] >= 0.5:
+            velocidade[0]= -velocidade[0]
+        if posi_NegaV[1] >= 0.5:
+            velocidade[1] = -velocidade[1]
+
+        posição["X-%d-0" % particulas] = X_0
+        posição["Y-%d-0" % particulas] = Y_0
+        posição["M-%d" % particulas] = massa
+        posição["Vx-%d-0" % particulas] = velocidade[0]
+        posição["Vy-%d-0" % particulas] = velocidade[1]
+
+
+    return posição
+
+def distancia(N,N2,posicao,T):
+    dX = (posicao["X-%d-%d"%(N,T)]-posicao["X-%d-%d"%(N2,T)])
+    dY = (posicao["Y-%d-%d"%(N,T)]-posicao["Y-%d-%d"%(N2,T)])
+    distancia = np.sqrt(dX**2 + dY**2)
+    return distancia
+
+def angulo(N1,posicao,T):
+    if posicao["X-%d-%d"%(N1,T)] == 0:
+        theta = np.pi
+    else:
+        theta = np.arctan(posicao["Y-%d-%d"%(N1,T)]/posicao["X-%d-%d"%(N1,T)]) 
+    sin = np.sin(theta)
+    cos = np.cos(theta)
+    return sin,cos
+
+def potencial(distancia,m1,m2,k):
+    pot_grav = (k*m1*m2)/distancia
+    return pot_grav
+
+def massaTotal(N,posiçao):
+    massa_total = 0
+    for particulas in range(N):
+        massa_total+= posiçao["M-%d"%particulas]
+    return massa_total
+
+def centro_massa(N,posição,T,massaT):
+    X_cm = 0
+    Y_cm = 0
+    for particulas in range(N):
+        X_cm += posição["X-%d-%d"%(particulas,T)]*posição["M-%d"%(particulas)]
+        Y_cm += posição["Y-%d-%d"%(particulas,T)]*posição["M-%d"%(particulas)]
+
+    posição["X-Cm-%d"%(T)] = X_cm/massaT
+    posição["Y-Cm-%d"%(T)] = Y_cm/massaT
+
+def evoluçãoPosição(N, posição_0, T):
+    for t in range(T-1):
+        for N1 in range(N):
+            posição_0["X-%d-%d"%(N1,t+1)] = 0
+            posição_0["Y-%d-%d"%(N1,t+1)] = 0
+            for N2 in range(N):
+                dist = distancia(N1,N2,posição_0,t)
+                sin,cos = angulo(N1,posição_0,t)
+                if dist>0.05:   
+                    a = (k*posição_0["M-%d"%N2])/(dist)**2
+                    posição_0["Vx-%d-%d"%(N1,t+1)] = posição_0["Vx-%d-%d" % (N1,t)] + a*cos*t/T
+                    posição_0["Vy-%d-%d"%(N1,t+1)] = posição_0["Vy-%d-%d" % (N1,t)] + a*sin*t/T
+                    posição_0["X-%d-%d"%(N1,t+1)] = posição_0["X-%d-%d"%(N1,t)] + posição_0["Vx-%d-%d" % (N1,t)]*t/T
+                    posição_0["Y-%d-%d"%(N1,t+1)] = posição_0["Y-%d-%d"%(N1,t)] + posição_0["Vy-%d-%d" % (N1,t)]*t/T
+                elif dist!=0:
+                    a = (k*posição_0["M-%d"%N2])/(dist)**2
+                    posição_0["Vx-%d-%d"%(N1,t+1)] = -posição_0["Vx-%d-%d" % (N1,t)] - a*cos*t/T
+                    posição_0["Vy-%d-%d"%(N1,t+1)] = -posição_0["Vy-%d-%d" % (N1,t)] - a*sin*t/T
+                    posição_0["X-%d-%d"%(N1,t+1)] = posição_0["X-%d-%d"%(N1,t)] - posição_0["Vx-%d-%d" % (N1,t)]*t/T
+                    posição_0["Y-%d-%d"%(N1,t+1)] = posição_0["Y-%d-%d"%(N1,t)] - posição_0["Vy-%d-%d" % (N1,t)]*t/T
+            
+        centro_massa(N, posição_0, t+1, massaTotal(N, posição_0))
+
+                
+
+    return posição_0
+
+def separador(N, novoDic, T):
+    posicao = []
+    for t in range(T):
+        xy = []
+        xy.append(novoDic["X-%d-%d" % (N, t)])
+        xy.append(novoDic["Y-%d-%d" % (N, t)])
+        posicao.append(xy)
+    for t in range(T-1):
+        xy = []
+        xy.append(novoDic["X-Cm-%d" % (t)])
+        xy.append(novoDic["Y-Cm-%d" % t])
+        posicao.append(xy)
+    return posicao
+
+# Constantes
+N = 20  # Número de partículas 
+T = 1000  # Passos temporais (reduzido para melhor performance)
+k = 0.1
+times = np.linspace(0, 1, T)
+
+Dic_posição = posição_inicial(N)
+massaTot = massaTotal(N,Dic_posição)
+centro_massa(N,Dic_posição,0,massaTot)
+Novo_dic = evoluçãoPosição(N, Dic_posição, T)
+# Criando listas com todas as posições ao longo do tempo
+trajetoria_x = np.zeros((T, N))
+trajetoria_y = np.zeros((T, N))
+trajetoria_Cmx = np.zeros((T,1))
+trajetoria_Cmy = np.zeros((T,1))
+
+for particulas in range(N):
+    posicoes = separador(particulas, Novo_dic, T)
+    trajetoria_x[:, particulas] = [p[0] for p in posicoes[:T]]  # Pegando apenas partículas
+    trajetoria_y[:, particulas] = [p[1] for p in posicoes[:T]]
+
+# Adicionando o centro de massa
+for t in range(T):
+    trajetoria_Cmx[t, 0] = Novo_dic["X-Cm-%d" % t] 
+    trajetoria_Cmy[t, 0] = Novo_dic["Y-Cm-%d" % t] 
+
+
+# Criando a animação
+fig, ax = plt.subplots()
+ax.set_xlim(-10, 10)
+ax.set_ylim(-10, 10)
+ax.set_xlabel("x")
+ax.set_ylabel("y")
+title = ax.set_title("Evolução das partículas de pólen")
+
+scat = ax.scatter(trajetoria_x[0], trajetoria_y[0], s=5, c='blue')
+cm_scat = ax.scatter(trajetoria_Cmx[0, 0], trajetoria_Cmy[0, 0], s=20, c='red', label="Centro de Massa")
+
+# Função de atualização da animação
+def update(frame):
+    scat.set_offsets(np.column_stack((trajetoria_x[frame], trajetoria_y[frame])))
+    cm_scat.set_offsets(np.column_stack((trajetoria_Cmx[frame], trajetoria_Cmy[frame])))
+    title.set_text(f"Tempo: t = {frame}")
+    return scat,
+
+# Criando a animação corretamente
+ani = animation.FuncAnimation(fig, update, frames=T, interval=500)
+
+plt.show()
+
+plt.plot(range(T),trajetoria_Cmx)
+plt.plot(range(T),trajetoria_Cmy)
+plt.show()
