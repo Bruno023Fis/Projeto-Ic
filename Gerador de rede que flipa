@@ -1,0 +1,60 @@
+import numpy as np 
+import matplotlib.pyplot as plt
+
+def gerador_Rede(L):
+    rede = np.zeros((L,L))
+    for i in range(L):
+        for j in range(L):
+            rede[i,j] = 1
+    return rede
+
+def Calculo_E(i,j,Rede,J,L):
+    i_futuro = 0
+    i_passado = 0
+    j_futuro = 0
+    j_passado = 0 
+
+    if i == 0:
+        i_futuro = i+1
+        i_passado = L-1
+    elif i == L-1:
+        i_futuro = 0
+        i_passado = i-1
+    elif j == 0:
+        j_passado = L-1
+        j_futuro = j+1
+    elif j == L-1:
+        j_futuro = 0
+        j_passado = J-1
+
+    E_flip = 2*J*Rede[i,j]*(Rede[i_futuro,j]+Rede[i_passado,j]+Rede[i,j_futuro]+Rede[i,j_passado])
+
+    return E_flip
+
+#constantes 
+T = 100 #k
+L = 10 # numeros de linhas e colunas
+J = 1 # energia do sistema
+Rede = gerador_Rede(L)
+max_inter = 1
+E_flip = 0 
+
+print(Rede)
+
+for intercao in range(max_inter):
+    for i in range(L):
+        for j in range(L):
+            if i ==0 or i==L-1 or j==0 or j==L-1:
+                E_flip = Calculo_E(i,j,Rede,J,L)
+                r = np.random.rand()
+            else:
+                E_flip = 2*J*Rede[i,j]*(Rede[i+1,j]+Rede[i-1,j]+Rede[i,j+1]+Rede[i,j-1])
+                r = np.random.rand()
+            if E_flip < 0:
+                Rede[i,j]*=-1
+            elif E_flip>0 and np.e**(-E_flip/T)>r:
+                Rede[i,j]*=-1
+
+print(Rede)
+            
+        
