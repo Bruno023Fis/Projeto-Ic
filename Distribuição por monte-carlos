@@ -1,0 +1,30 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def u(y):
+    valor_peso = -np.log(1-y)
+    return valor_peso
+
+def r(u):
+    return np.sqrt(2*u)
+
+def x1(y,theta):
+    return u(y)*np.cos(theta)
+
+def x2(y,theta):
+    return u(y)*np.sin(theta)
+
+passos = 100_000_00
+y = np.random.rand(passos)
+y_2 = np.random.rand(passos)
+theta =2*np.pi * np.random.rand(passos)
+theta_2 = 2*np.pi * np.random.rand(passos)
+
+
+X_1 = x1(y,theta)
+X_2 = x2(y_2,theta_2)
+
+
+plt.hist(X_1,bins = 1000, density=True)
+plt.hist(X_2,bins = 1000, density=True)
+plt.show()
