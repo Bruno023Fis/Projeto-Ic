@@ -1,0 +1,83 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
+def posição_inicial(N):
+    posição = {} # chave coordenada - Partícula - tempo
+    for particulas in range(N):
+        X_0 = np.random.rand()
+        Y_0 = np.random.rand()
+        posi_Nega = np.random.rand(2)
+        if posi_Nega[0] >= 0.5:
+            X_0 = -X_0
+        if posi_Nega[1] >= 0.5:
+            Y_0 = -Y_0
+
+        posição["X-%d-0" % particulas] = X_0
+        posição["Y-%d-0" % particulas] = Y_0
+
+    return posição
+
+def evoluçãoPosição(N, posição_0, T, dx, dy):
+    for particulas in range(N):
+        for t in range(T-1):
+            a = np.random.rand()
+            b = np.random.rand()
+            if a >= 0.5:
+                posição_0["X-%d-%d" % (particulas, t+1)] = posição_0["X-%d-%d" % (particulas, t)] + dx
+            else:
+                posição_0["X-%d-%d" % (particulas, t+1)] = posição_0["X-%d-%d" % (particulas, t)] - dx
+            if b >= 0.5:
+                posição_0["Y-%d-%d" % (particulas, t+1)] = posição_0["Y-%d-%d" % (particulas, t)] + dy
+            else:
+                posição_0["Y-%d-%d" % (particulas, t+1)] = posição_0["Y-%d-%d" % (particulas, t)] - dy
+    
+    return posição_0
+
+def separador(N, novoDic, T):
+    posicao = []
+    for t in range(T):
+        xy = []
+        xy.append(novoDic["X-%d-%d" % (N, t)])
+        xy.append(novoDic["Y-%d-%d" % (N, t)])
+        posicao.append(xy)
+    return posicao
+
+# Constantes
+N = 500  # Número de partículas 
+T = 1000  # Passos temporais (reduzido para melhor performance)
+dx, dy = 0.1, 0.1
+times = np.linspace(0, 1, T)
+
+Dic_posição = posição_inicial(N)
+Novo_dic = evoluçãoPosição(N, Dic_posição, T, dx, dy)
+
+# Criando listas com todas as posições ao longo do tempo
+trajetoria_x = np.zeros((T, N))
+trajetoria_y = np.zeros((T, N))
+
+for particulas in range(N):
+    posicoes = separador(particulas, Novo_dic, T)
+    trajetoria_x[:, particulas] = [p[0] for p in posicoes]
+    trajetoria_y[:, particulas] = [p[1] for p in posicoes]
+
+# Criando a animação
+fig, ax = plt.subplots()
+ax.set_xlim(-10, 10)
+ax.set_ylim(-10, 10)
+ax.set_xlabel("x")
+ax.set_ylabel("y")
+title = ax.set_title("Evolução das partículas de pólen")
+
+scat = ax.scatter(trajetoria_x[0], trajetoria_y[0], s=5, c='blue')
+
+# Função de atualização da animação
+def update(frame):
+    scat.set_offsets(np.column_stack((trajetoria_x[frame], trajetoria_y[frame])))
+    title.set_text(f"Tempo: t = {frame}")
+    return scat,
+
+# Criando a animação corretamente
+ani = animation.FuncAnimation(fig, update, frames=T, interval=500)
+
+plt.show()
