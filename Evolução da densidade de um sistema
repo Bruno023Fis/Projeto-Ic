@@ -1,0 +1,39 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
+# Definição dos parâmetros
+sigma = 1
+x0 = -10
+omega = np.pi
+def prob_density(x, t):
+    cos_wt = np.cos(omega * t)
+    if np.abs(cos_wt) < 1e-6:  # Evita divisões por valores muito pequenos
+        return np.full_like(x, np.nan)
+    return np.exp(-((x / cos_wt - x0) ** 2)) / (np.abs(cos_wt) * np.sqrt(np.pi) * sigma)
+
+# Criando os pontos do eixo x
+x = np.linspace(-20, 20, 4100)
+times = np.linspace(0, 1, 100)  # Intervalo de tempo
+
+fig, ax = plt.subplots()
+line, = ax.plot([], [], lw=2)
+ax.set_xlim(-20, 20)
+ax.set_ylim(0, 1)
+ax.set_xlabel("x")
+ax.set_ylabel("Densidade de Probabilidade")
+title = ax.set_title("Evolução da Densidade de Probabilidade")
+
+def init():
+    line.set_data([], [])
+    return line,
+
+def update(frame):
+    t = times[frame]
+    y = prob_density(x, t)
+    line.set_data(x, y)     
+    title.set_text(f"Tempo: t = {t:.2f}")
+    return line,
+
+ani = animation.FuncAnimation(fig, update, frames=len(times), init_func=init, blit=True)
+plt.show()
