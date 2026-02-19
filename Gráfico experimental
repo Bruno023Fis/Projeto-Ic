@@ -1,0 +1,35 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def B(x, x0, d, R, mu0, N, I):
+    term1 = ((d / 2 - (x - x0 - d / 2))**2 + R**2)**(3/2)
+    term2 = ((d / 2 + (x - x0 - d / 2))**2 + R**2)**(3/2)
+    return mu0 * N * I * R**2 * (1 / term1 - 1 / term2)*100000 
+
+# Exemplo de uso
+mu0 = 4 * np.pi * 1e-7  # Permeabilidade magnética do vácuo (T·m/A)
+N = 52  # Número de espiras
+I = 1  # Corrente elétrica (A)
+d = 21.5  # Distância entre bobinas (cm)
+R = 41.5/2 # Raio da bobina (cm)
+x0 = 70  # Posição central da bobina (cm)
+
+x_values = np.linspace(-0, 150, 2000)  # Valores de x para plotar
+B_values = B(x_values, x0, d, R, mu0, N, I)
+
+x = [50, 55, 60, 65, 70, 75, 80, 85, 90, 95]
+y1 = [0, 0, -0.06, -0.1, -0.13, -0.07, 0, 0.16, 0.28, 0.34]
+
+B_uncertainty = 0.05 * np.array(y1)
+
+# Plotando o campo magnético
+plt.figure(figsize=(8, 5))
+plt.plot(x_values, B_values, linestyle='dotted', label='B(x)')
+plt.plot(x, y1, label='Corrente no sentido oposto das duas bobinas')
+plt.errorbar(x, y1, xerr=1, yerr=np.abs(B_uncertainty), fmt='o', label='Incerteza', capsize=3)
+plt.xlabel('x (cm)')
+plt.ylabel('B (mT)')
+plt.title('Campo Magnético B(x) das bobinas de Helmholtz com as correntes no sentido oposto')
+plt.legend()
+plt.grid()
+plt.show()
