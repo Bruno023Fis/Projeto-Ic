@@ -1,0 +1,33 @@
+import numpy as np
+
+def f(x):
+    valor = 1/(1+x**2)
+    return valor
+
+
+def media(x,soma):
+    mediafun = soma/len(x)
+    return(mediafun)
+
+def variancia(f,x,soma):
+    mediaquadrada = 0
+    for i in x: 
+        mediaquadrada += f(i)**2
+    norma = 1/len(x)
+    erro =  norma*(norma*mediaquadrada-media(x,soma)**2)
+
+    return erro
+
+for vezes in range(2,11):
+    soma = 0
+    passos = int((50000 -10)/10)
+    y = np.random.rand(passos*vezes,1)
+    for i in y:
+        soma += f(i)
+    
+    integral = media(y,soma)
+    erro = variancia(f,y,soma)
+
+    print("Integral é igual a %f" %integral)
+    print("A variancia é de %f"%erro)
+    
