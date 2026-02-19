@@ -1,0 +1,64 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def matriz(N, k):
+    D = np.zeros((N, N))
+    for i in range(N):
+        for j in range(N):
+            if i == j:
+                D[i, i] = -2 * k
+            elif j - 1 == i:
+                D[i, j - 1] = k
+            elif j + 1 == i:
+                D[i, j + 1] = k
+    return D
+
+def analytical_solution(N, k=1, M=(1+10)/2):
+    return np.array([2 * np.sqrt(k / M) * np.sin((n * np.pi) / (2 * (N + 1))) for n in range(1, N + 1)])
+
+def analytical_eigenvectors(N):
+    x = np.linspace(1, N, N)
+    modes = np.array([np.sin(n * np.pi * x / (N + 1)) for n in range(1, N + 1)])
+    return modes / np.linalg.norm(modes, axis=1, keepdims=True)
+
+def main():
+    N = 500
+    k = 1
+    masses = np.array([1 if i % 2 == 0 else 10 for i in range(N)])
+    M_avg = np.mean(masses)
+    
+    K = matriz(N, k)
+    M_inv_sqrt = np.diag(1 / np.sqrt(masses))
+    B = -M_inv_sqrt @ K @ M_inv_sqrt
+    
+    eigenvalues, eigenvectors = np.linalg.eigh(B)
+    
+    # Normalizar autovetores
+    
+    analytical_eigenvalues = analytical_solution(N, k, M_avg)
+    analytical_modes = analytical_eigenvectors(N)
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, N + 1), eigenvalues, 'bo', markersize=2, label='Numérico')
+    plt.plot(range(1, N + 1), analytical_eigenvalues, 'r-', label='Analítico')
+    plt.xlabel('Índice n')
+    plt.ylabel('Autovalores')
+    plt.title('Autovalores ordenados')
+    plt.legend()
+    plt.grid()
+    plt.show()
+    
+    num_modes = 3
+    plt.figure(figsize=(10, 6))
+    for i in range(num_modes):
+        plt.plot(eigenvectors[:, i], label=f'Modo Numérico {i + 1}')
+        plt.plot(analytical_modes[i, :], '--', label=f'Modo Analítico {i + 1}')
+    plt.xlabel('Índice da Massa')
+    plt.ylabel('Deslocamento')
+    plt.title('Modos normais de oscilação')
+    plt.legend()
+    plt.grid()
+    plt.show()
+    
+if __name__ == '__main__':
+    main()
