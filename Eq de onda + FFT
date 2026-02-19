@@ -1,0 +1,54 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def f(x):
+    valor = 1+x**2
+    return 1/valor
+
+def w(x):
+    valor = (6/5)*(1-(x**2)/2)
+    return valor
+
+def w_2(x):
+    return 6/5
+
+def x(y):
+    valor = (6*y/5)*(1-(y**2)/6) 
+    return(valor)
+
+def media(passos,soma):
+    mediafun = soma/passos
+    return(mediafun)
+
+passos = 10_000_00
+y = np.random.rand(passos,2) 
+soma = 0
+aceitos = 0
+for i in range(passos):
+    if y[i,1]< w(y[i,0])/w_2(y[i,0]):
+        soma += f(x(y[i,1])/w(x(y[i,1])))
+        aceitos +=1
+    else:
+        k=y[i,1]
+        while k>w(y[i,0])/w_2(y[i,0]):
+            k = np.random.rand(1)
+        soma+=f(x(k)/w(x(k)))
+        y[i,1] = k
+        aceitos +=1
+
+integral = media(passos,soma)
+
+print(integral)
+
+x_analitico = np.linspace(0, 1, 100)
+y_analitico = w(x_analitico)
+y_2 = w_2(x_analitico)
+
+plt.hist(y[:, 1], bins=30, density=True, alpha=0.7, label="Distribuição de amostras")
+plt.plot(x_analitico, y_analitico, color='red', label="Distribuição teórica w(x)")
+plt.xlabel("x")
+plt.ylabel("Frequência")
+plt.legend()
+plt.show()
+
+print(f"Taxa de aceitação: {aceitos/passos:.4f}")
