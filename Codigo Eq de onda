@@ -1,0 +1,59 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import animation, rc
+from IPython.display import HTML
+
+# Constantes
+k = 1000  # Constante para a condição inicial
+l = 1.0   # Comprimento da corda
+x0 = 0.3  # Posição inicial do pulso
+c1 = 300   # Velocidade da onda na primeira parte
+c2 = 150 # Velocidade da onda na segunda metade
+dx = 0.001 # Passo espacial
+dt = dx / c1  # Passo temporal (condição de estabilidade CFL)
+N = int(l / dx)  # Número de pontos espaciais
+T = 2000          # Número de passos de tempo
+# Fator de estabilidade CFL (deve ser <= 1) conta correta c*dt/dx    
+
+# Inicialização da matriz y
+y = np.zeros((N, T))
+x = np.linspace(0, l, N)
+
+# Condição inicial
+
+y[:, 0] = np.exp(-k * ((x - x0)**2))
+y[:, 1] = y[:, 0]  
+
+# Atualização das equações diferenciais
+for t in range(1, T - 1):
+    for i in range(1, N - 1):
+        if x[i] >= l/2:
+            r = c1*dt/dx # Fator de estabilidade CFL (deve ser <= 1) conta correta c*dt/dx    
+            y[i, t+1] = (r**2) * (y[i + 1, t] + y[i - 1, t]) + 2 * (1 - r**2) * y[i, t] - y[i, t - 1]
+        else: 
+            r = c2*dt/dx
+            y[i, t+1] = (r**2) * (y[i + 1, t] + y[i - 1, t]) + 2 * (1 - r**2) * y[i, t] - y[i, t - 1]
+
+
+fig, ax = plt.subplots()
+ax.set_xlim(0, l)
+ax.set_ylim(-l, l)
+line, = ax.plot([], [], lw=2)
+
+# Inicialização da animação
+def init():
+    line.set_data([], [])
+    return line,
+
+# Função de animação
+def animate(t):
+    line.set_data(x, y[:, t])
+    return line,
+
+anim = animation.FuncAnimation(fig, animate, init_func=init,
+                               frames=T, interval=1, blit=True)
+
+rc('animation', html='jshtml')
+anim
+
+plt.show()
